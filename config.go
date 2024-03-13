@@ -5,6 +5,7 @@ import (
 	tdlib "github.com/zelenin/go-tdlib/client"
 	"log"
 	"os"
+	"regexp"
 )
 
 type Config struct {
@@ -19,11 +20,22 @@ type Config struct {
 type ForwardingConfig struct {
 	Source       ParticipantConfig
 	Destinations []ParticipantConfig
+	Filter       RegexFilterConfig
+}
+
+type RegexFilterConfig struct {
+	Regex string `json:"regex"`
 }
 
 type ForwardingConfigResolved struct {
 	Source       Participant
 	Destinations []Participant
+	Filter       MessageFilter
+}
+
+type MessageFilter interface {
+	Passes(msg *tdlib.Message) bool
+	Describe() string
 }
 
 type ParticipantConfig interface {
@@ -74,13 +86,20 @@ func parseConfig() *Config {
 	return &config
 }
 
-func (config *Config) resolveChatIds(client *tdlib.Client) *ForwardingConfigResolved {
+func (config *Config) resolveForwardingConfig(client *tdlib.Client) *ForwardingConfigResolved {
 	fc := config.ForwardingConfig
 	var resolved ForwardingConfigResolved
 	resolved.Source = config.resolveParticipantConfig(client, fc.Source)
 	resolved.Destinations = make([]Participant, len(fc.Destinations))
 	for i, receiver := range fc.Destinations {
 		resolved.Destinations[i] = config.resolveParticipantConfig(client, receiver)
+	}
+	if fc.Filter.Regex != "" {
+		r := regexp.MustCompile(fc.Filter.Regex)
+		resolved.Filter = &RegexFilter{regex: r}
+		log.Printf("Loaded filter %s", resolved.Filter.Describe())
+	} else {
+		resolved.Filter = &EmptyFilter{}
 	}
 	return &resolved
 }

@@ -8,6 +8,7 @@ func (forwardConfig *ForwardingConfig) UnmarshalJSON(data []byte) error {
 	var tmp struct {
 		Source       json.RawMessage   `json:"source"`
 		Destinations []json.RawMessage `json:"destinations"`
+		Filter       RegexFilterConfig `json:"filter"`
 	}
 
 	err := json.Unmarshal(data, &tmp)
@@ -29,6 +30,7 @@ func (forwardConfig *ForwardingConfig) UnmarshalJSON(data []byte) error {
 		}
 		forwardConfig.Destinations[i] = *receiver
 	}
+	forwardConfig.Filter = tmp.Filter
 	return nil
 }
 

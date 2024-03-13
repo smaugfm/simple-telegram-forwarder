@@ -9,36 +9,30 @@ import (
 )
 
 func processMessage(client *tdlib.Client, resolved *ForwardingConfigResolved, msg *tdlib.Message) {
-	if msg.ChatId != resolved.Source.ChatId {
+	if msg.IsOutgoing || msg.ChatId != resolved.Source.ChatId {
 		return
 	}
 	logIncomingMessage(client, msg)
+	inputContent, err := makeInputMessageContent(msg.Content)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	if !resolved.Filter.Passes(msg) {
+		log.Printf("Did not pass filter %s", resolved.Filter.Describe())
+		return
+	}
 	for _, destination := range resolved.Destinations {
 		log.Printf("Sending to '%s' (%d)", destination.Name, destination.ChatId)
-		req, err := makeSendMessageRequest(destination.ChatId, msg)
-		if err != nil {
-			if err != nil {
-				log.Printf("Failed to make message request: %v", err)
-				continue
-			}
-		}
-		_, err = client.SendMessage(req)
+		_, err = client.SendMessage(&tdlib.SendMessageRequest{
+			ChatId:              destination.ChatId,
+			InputMessageContent: inputContent,
+		})
 		if err != nil {
 			log.Printf("Failed to send to '%s' (%d). %v", destination.Name, destination.ChatId, err)
 			continue
 		}
 	}
-}
-
-func makeSendMessageRequest(chatId int64, msg *tdlib.Message) (*tdlib.SendMessageRequest, error) {
-	inputContent, err := makeInputMessageContent(msg.Content)
-	if err != nil {
-		return nil, err
-	}
-	return &tdlib.SendMessageRequest{
-		ChatId:              chatId,
-		InputMessageContent: inputContent,
-	}, nil
 }
 
 func makeInputMessageContent(content tdlib.MessageContent) (tdlib.InputMessageContent, error) {
@@ -265,6 +259,29 @@ func makeInputMessageContent(content tdlib.MessageContent) (tdlib.InputMessageCo
 	return nil, types.Error{Msg: fmt.Sprintf("Unknown message type %s", content.MessageContentType())}
 }
 
+func getTextFromMessage(msg *tdlib.Message) string {
+
+	switch msg.Content.MessageContentType() {
+	case tdlib.TypeMessageText:
+		return msg.Content.(*tdlib.MessageText).Text.Text
+	case tdlib.TypeMessageAnimation:
+		return msg.Content.(*tdlib.MessageAnimation).Caption.Text
+	case tdlib.TypeMessageAudio:
+		return msg.Content.(*tdlib.MessageAudio).Caption.Text
+	case tdlib.TypeMessageDocument:
+		return msg.Content.(*tdlib.MessageDocument).Caption.Text
+	case tdlib.TypeMessagePhoto:
+		return msg.Content.(*tdlib.MessagePhoto).Caption.Text
+	case tdlib.TypeMessageVideo:
+		return msg.Content.(*tdlib.MessageVideo).Caption.Text
+	case tdlib.TypeMessageVenue:
+		return msg.Content.(*tdlib.MessageVenue).Venue.Title
+	case tdlib.TypeMessageContact:
+		return fmt.Sprintf("%s %s", msg.Content.(*tdlib.MessageContact).Contact.FirstName, msg.Content.(*tdlib.MessageContact).Contact.LastName)
+	}
+	return ""
+}
+
 func notSupportedError(msgType string) types.Error {
 	return types.Error{Msg: fmt.Sprintf("Message type %s is not supported. Skipping...", msgType)}
 }
@@ -305,16 +322,7 @@ func logIncomingMessage(client *tdlib.Client, msg *tdlib.Message) bool {
 			msg.Content.MessageContentType(), msg.Id, msg.ChatId)
 		return true
 	}
-	var text string
-	if msg.Content.MessageContentType() == tdlib.TypeMessageText {
-		text = msg.Content.(*tdlib.MessageText).Text.Text
-	} else if msg.Content.MessageContentType() == tdlib.TypeMessagePhoto {
-		text = msg.Content.(*tdlib.MessagePhoto).Caption.Text
-	} else if msg.Content.MessageContentType() == tdlib.TypeMessageVideo {
-		text = msg.Content.(*tdlib.MessageVideo).Caption.Text
-	} else {
-		text = ""
-	}
+	text := getTextFromMessage(msg)
 	var sender string
 	var senderId int64
 	if msg.SenderId.MessageSenderType() == tdlib.TypeMessageSenderUser {
