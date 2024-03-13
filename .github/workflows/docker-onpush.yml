@@ -1,0 +1,24 @@
+name: Push to DockerHub
+on: [ push ]
+env:
+  DOCKER_USER: ${{secrets.DOCKER_USER}}
+  DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+jobs:
+  push-to-docker-hub:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.message, '#dockerpush') }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: docker login
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d--%M-%S')"
+      - name: Docker build
+        run: docker build . --tag $DOCKER_USER/${{ github.event.repository.name }}:${{ steps.date.outputs.date }}
+      - name: Tag with latest
+        if: ${{ contains(github.event.head_commit.message, '#latest') }}
+        run: docker tag $DOCKER_USER/${{ github.event.repository.name }}:${{ steps.date.outputs.date }} $DOCKER_USER/${{ github.event.repository.name }}:latest
+      - name: Docker push
+        run: docker push --all-tags $DOCKER_USER/${{ github.event.repository.name }}
