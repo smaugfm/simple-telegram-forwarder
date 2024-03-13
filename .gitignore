@@ -1,3 +1,5 @@
 simple-telegram-forwarder.config.json
 .tdlib
 .idea
+simple-telegram-forwarder
+.DS_Store
