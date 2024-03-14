@@ -29,5 +29,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=user/app:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USER }}/simple-telegram-forwarder:latest
           cache-to: type=inline
