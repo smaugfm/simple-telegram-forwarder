@@ -12,7 +12,7 @@ A small tool for automatically forwarding telegram messages from a source chat t
 
 ### Usage
 
-You'll need a Telegram account for an app to work. The account must be a member and
+You'll need a Telegram account for the app to work. The account must be a member and
 have necessary permissions in the chats/groups/channels between which you want to forward messages.
 
 - [Create an application](https://core.telegram.org/api/obtaining_api_id)
