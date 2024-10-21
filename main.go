@@ -11,7 +11,7 @@ import (
 func main() {
 	config := parseConfig()
 	client := config.authorize()
-	resolved := config.resolveForwardingConfig(client)
+	resolvedConfig := config.resolveForwardingConfig(client)
 
 	listener := client.GetListener()
 	defer listener.Close()
@@ -22,7 +22,7 @@ func main() {
 	for update := range listener.Updates {
 		if update.GetType() == tdlib.TypeUpdateNewMessage {
 			msg := update.(*tdlib.UpdateNewMessage).Message
-			processMessage(client, resolved, msg)
+			processMessage(client, resolvedConfig, msg)
 		}
 	}
 }

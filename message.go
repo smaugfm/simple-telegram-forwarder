@@ -23,11 +23,20 @@ func processMessage(client *tdlib.Client, resolved *ForwardingConfigResolved, ms
 		return
 	}
 	for _, destination := range resolved.Destinations {
-		log.Printf("Sending to '%s' (%d)", destination.Name, destination.ChatId)
-		_, err = client.SendMessage(&tdlib.SendMessageRequest{
-			ChatId:              destination.ChatId,
-			InputMessageContent: inputContent,
-		})
+		if resolved.Forward {
+			log.Printf("Forwarding to '%s' (%d)", destination.Name, destination.ChatId)
+			_, err = client.ForwardMessages(&tdlib.ForwardMessagesRequest{
+				ChatId:     destination.ChatId,
+				FromChatId: msg.ChatId,
+				MessageIds: []int64{msg.Id},
+			})
+		} else {
+			log.Printf("Sending to '%s' (%d)", destination.Name, destination.ChatId)
+			_, err = client.SendMessage(&tdlib.SendMessageRequest{
+				ChatId:              destination.ChatId,
+				InputMessageContent: inputContent,
+			})
+		}
 		if err != nil {
 			log.Printf("Failed to send to '%s' (%d). %v", destination.Name, destination.ChatId, err)
 			continue
