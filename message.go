@@ -9,7 +9,7 @@ import (
 )
 
 func processMessage(client *tdlib.Client, resolved *ForwardingConfigResolved, msg *tdlib.Message) {
-	if msg.IsOutgoing || msg.ChatId != resolved.Source.ChatId {
+	if msg.ChatId != resolved.Source.ChatId {
 		return
 	}
 	logIncomingMessage(client, msg)
