@@ -19,7 +19,7 @@ type Config struct {
 }
 
 type ForwardingConfig struct {
-	Source       []ParticipantConfig
+	Sources      []ParticipantConfig
 	Destinations []ParticipantConfig
 	Filter       RegexFilterConfig
 	Forward      bool
@@ -30,7 +30,7 @@ type RegexFilterConfig struct {
 }
 
 type ForwardingConfigResolved struct {
-	Source       mapset.Set[int64]
+	Sources      mapset.Set[int64]
 	Destinations []Participant
 	Filter       MessageFilter
 	Forward      bool
@@ -93,13 +93,13 @@ func (config *Config) resolveForwardingConfig(client *tdlib.Client) *ForwardingC
 	fc := config.ForwardingConfig
 	var resolved ForwardingConfigResolved
 
-	resolvedSources := make([]Participant, len(fc.Source))
-	for i, source := range fc.Source {
+	resolvedSources := make([]Participant, len(fc.Sources))
+	for i, source := range fc.Sources {
 		resolvedSources[i] = config.resolveParticipantConfig("source", client, source)
 	}
-	resolved.Source = mapset.NewSetWithSize[int64](len(resolvedSources))
+	resolved.Sources = mapset.NewSetWithSize[int64](len(resolvedSources))
 	for _, source := range resolvedSources {
-		resolved.Source.Add(source.ChatId)
+		resolved.Sources.Add(source.ChatId)
 	}
 
 	resolved.Destinations = make([]Participant, len(fc.Destinations))
@@ -146,7 +146,7 @@ func (config *Config) resolveParticipantConfig(participantType string, client *t
 }
 
 func (config *Config) validate() {
-	if config.ForwardingConfig.Source == nil || len(config.ForwardingConfig.Source) == 0 {
+	if config.ForwardingConfig.Sources == nil || len(config.ForwardingConfig.Sources) == 0 {
 		log.Fatalln("Missing forwarding_config.source")
 	}
 	if len(config.ForwardingConfig.Destinations) == 0 {

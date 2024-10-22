@@ -2,7 +2,8 @@
 
 A small tool for automatically forwarding telegram messages from a source chat to a list of destination chats as they appear.
 
-- Forwarding to multiple destinations
+- Monitoring multiple sources and forwards/copies messages to all defined destinations
+- Forwarding (with 'Forwarded to' label) or just copying (post as new) messages to destinations
 - Filtering messages with regular expressions
 - `--auth-only` flag to only interactively login to Telegram and then exit
 - This app uses Client API, so there is no need to create any bots and be an admin of the group/channel from where you
@@ -31,8 +32,8 @@ is `simple-telegram-forwarder.config.json`.
 |------------------------------------------------|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
 | `$.api_hash`                                   | `cb01sdfe7922afd2970359f6aa76d0` | `api_hash` obtained from creating a Telegram application                                                                        |
 | `$.api_id`                                     | `98011131`                       | `api_id` obtained from creating a Telegram application                                                                          |
-| `$.forwarding_config.source.username`          | `@telegram`                      | Username or channel name of the source. Use this field or `$.forwarding_config.source.chat_id`                                  |
-| `$.forwarding_config.source.chat_id`           | `-1001005640892`                 | Chat ID of the source. Use i.e. `@userinfobot` to get it. Use this field or `$.forwarding_config.source.username`               |
+| `$.forwarding_config.sources[*].username`      | `@telegram`                      | Username or channel name of the source. Use this field or `$.forwarding_config.source.chat_id`                                  |
+| `$.forwarding_config.sources[*].chat_id`       | `-1001005640892`                 | Chat ID of the source. Use i.e. `@userinfobot` to get it. Use this field or `$.forwarding_config.source.username`               |
 | `$.forwarding_config.destinations`             |                                  | Array of destinations. Must contain at least one                                                                                |
 | `$.forwarding_config.destinations[*].username` | `@telegram`                      | Username or channel name of the source. Use this field or `$.forwarding_config.destinations[*].chat_id`                         |
 | `$.forwarding_config.destinations[*].chat_id`  | `-1001005640892`                 | Chat ID of the destination. Use i.e. `@userinfobot` to get it. Use this field or `$.forwarding_config.destinations[*].username` |
@@ -46,9 +47,11 @@ Example configuration file:
   "api_hash": "cb01sdfe7922afd2970359f6aa76d0",
   "api_id": 98011131,
   "forwarding_config": {
-    "source": {
+    "sources": [{
       "username": "@telegram"
-    },
+    },{
+      "chat_id": "-1001005640893"
+    }],
     "destinations": [
       {
         "chat_id": -1001005640892

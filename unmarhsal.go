@@ -5,7 +5,7 @@ import (
 )
 
 type internalConfig struct {
-	Source       json.RawMessage   `json:"source"`
+	Sources      []json.RawMessage `json:"sources"`
 	Destinations []json.RawMessage `json:"destinations"`
 	Filter       RegexFilterConfig `json:"filter"`
 	Forward      bool              `json:"forward"`
@@ -19,7 +19,7 @@ func (forwardConfig *ForwardingConfig) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	forwardConfig.Source, err = unmarshalParticipantConfigPossibleArray(tmp.Source)
+	forwardConfig.Sources, err = unmarshalParticipantConfigArray(tmp.Sources)
 	if err != nil {
 		return err
 	}
@@ -70,16 +70,4 @@ func unmarshalParticipantConfigArray(array []json.RawMessage) ([]ParticipantConf
 		result[i] = *receiver
 	}
 	return result, nil
-}
-
-func unmarshalParticipantConfigPossibleArray(possibleArray json.RawMessage) ([]ParticipantConfig, error) {
-	var tmp []json.RawMessage
-	if err := json.Unmarshal(possibleArray, &tmp); err != nil {
-		config, err := unmarshalParticipantConfig(possibleArray)
-		if err != nil {
-			return nil, err
-		}
-		return []ParticipantConfig{*config}, nil
-	}
-	return unmarshalParticipantConfigArray(tmp)
 }
