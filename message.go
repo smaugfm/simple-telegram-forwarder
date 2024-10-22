@@ -8,8 +8,8 @@ import (
 	"log"
 )
 
-func processMessage(client *tdlib.Client, resolved *ForwardingConfigResolved, msg *tdlib.Message) {
-	if msg.ChatId != resolved.Source.ChatId {
+func processMessage(client *tdlib.Client, config *ForwardingConfigResolved, msg *tdlib.Message) {
+	if !config.Source.Contains(msg.ChatId) {
 		return
 	}
 	logIncomingMessage(client, msg)
@@ -18,12 +18,12 @@ func processMessage(client *tdlib.Client, resolved *ForwardingConfigResolved, ms
 		log.Print(err)
 		return
 	}
-	if !resolved.Filter.Passes(msg) {
-		log.Printf("Did not pass filter %s", resolved.Filter.Describe())
+	if !config.Filter.Passes(msg) {
+		log.Printf("Did not pass filter %s", config.Filter.Describe())
 		return
 	}
-	for _, destination := range resolved.Destinations {
-		if resolved.Forward {
+	for _, destination := range config.Destinations {
+		if config.Forward {
 			log.Printf("Forwarding to '%s' (%d)", destination.Name, destination.ChatId)
 			_, err = client.ForwardMessages(&tdlib.ForwardMessagesRequest{
 				ChatId:     destination.ChatId,

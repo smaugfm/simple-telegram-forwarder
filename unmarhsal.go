@@ -4,33 +4,31 @@ import (
 	"encoding/json"
 )
 
+type internalConfig struct {
+	Source       json.RawMessage   `json:"source"`
+	Destinations []json.RawMessage `json:"destinations"`
+	Filter       RegexFilterConfig `json:"filter"`
+	Forward      bool              `json:"forward"`
+}
+
 func (forwardConfig *ForwardingConfig) UnmarshalJSON(data []byte) error {
-	var tmp struct {
-		Source       json.RawMessage   `json:"source"`
-		Destinations []json.RawMessage `json:"destinations"`
-		Filter       RegexFilterConfig `json:"filter"`
-		Forward      bool              `json:"forward"`
-	}
+	var tmp internalConfig
 
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
 	}
 
-	sender, err := unmarshalParticipantConfig(tmp.Source)
+	forwardConfig.Source, err = unmarshalParticipantConfigPossibleArray(tmp.Source)
 	if err != nil {
 		return err
 	}
-	forwardConfig.Source = *sender
 
-	forwardConfig.Destinations = make([]ParticipantConfig, len(tmp.Destinations))
-	for i, receiverRaw := range tmp.Destinations {
-		receiver, err := unmarshalParticipantConfig(receiverRaw)
-		if err != nil {
-			return err
-		}
-		forwardConfig.Destinations[i] = *receiver
+	forwardConfig.Destinations, err = unmarshalParticipantConfigArray(tmp.Destinations)
+	if err != nil {
+		return err
 	}
+
 	forwardConfig.Filter = tmp.Filter
 	forwardConfig.Forward = tmp.Forward
 	return nil
@@ -60,4 +58,28 @@ func unmarshalParticipantConfig(data json.RawMessage) (*ParticipantConfig, error
 		participant = &senderId
 	}
 	return &participant, nil
+}
+
+func unmarshalParticipantConfigArray(array []json.RawMessage) ([]ParticipantConfig, error) {
+	result := make([]ParticipantConfig, len(array))
+	for i, receiverRaw := range array {
+		receiver, err := unmarshalParticipantConfig(receiverRaw)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = *receiver
+	}
+	return result, nil
+}
+
+func unmarshalParticipantConfigPossibleArray(possibleArray json.RawMessage) ([]ParticipantConfig, error) {
+	var tmp []json.RawMessage
+	if err := json.Unmarshal(possibleArray, &tmp); err != nil {
+		config, err := unmarshalParticipantConfig(possibleArray)
+		if err != nil {
+			return nil, err
+		}
+		return []ParticipantConfig{*config}, nil
+	}
+	return unmarshalParticipantConfigArray(tmp)
 }
