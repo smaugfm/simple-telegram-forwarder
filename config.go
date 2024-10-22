@@ -21,6 +21,7 @@ type ForwardingConfig struct {
 	Source       ParticipantConfig
 	Destinations []ParticipantConfig
 	Filter       RegexFilterConfig
+	Forward      bool
 }
 
 type RegexFilterConfig struct {
@@ -31,6 +32,7 @@ type ForwardingConfigResolved struct {
 	Source       Participant
 	Destinations []Participant
 	Filter       MessageFilter
+	Forward      bool
 }
 
 type MessageFilter interface {
@@ -91,6 +93,7 @@ func (config *Config) resolveForwardingConfig(client *tdlib.Client) *ForwardingC
 	var resolved ForwardingConfigResolved
 	resolved.Source = config.resolveParticipantConfig(client, fc.Source)
 	resolved.Destinations = make([]Participant, len(fc.Destinations))
+	resolved.Forward = fc.Forward
 	for i, receiver := range fc.Destinations {
 		resolved.Destinations[i] = config.resolveParticipantConfig(client, receiver)
 	}
@@ -100,6 +103,9 @@ func (config *Config) resolveForwardingConfig(client *tdlib.Client) *ForwardingC
 		log.Printf("Loaded filter %s", resolved.Filter.Describe())
 	} else {
 		resolved.Filter = &EmptyFilter{}
+	}
+	if fc.Forward {
+		log.Printf("Will forward messages instead of sending a copy")
 	}
 	return &resolved
 }

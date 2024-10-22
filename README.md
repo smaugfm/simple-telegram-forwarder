@@ -36,6 +36,7 @@ is `simple-telegram-forwarder.config.json`.
 | `$.forwarding_config.destinations`             |                                  | Array of destinations. Must contain at least one                                                                                |
 | `$.forwarding_config.destinations[*].username` | `@telegram`                      | Username or channel name of the source. Use this field or `$.forwarding_config.destinations[*].chat_id`                         |
 | `$.forwarding_config.destinations[*].chat_id`  | `-1001005640892`                 | Chat ID of the destination. Use i.e. `@userinfobot` to get it. Use this field or `$.forwarding_config.destinations[*].username` |
+| `$.forwarding_config.forward`                  | `bool`                           | Forward messages instead of sending a copy. Default: false                                                                      |
 | `$.forwarding_config.filter`                   | `(?i)(any\|regex?\|(you)*want)`  | Optional regular expression for message filtering: only matched messages are forwarded.                                         |
 
 Example configuration file:
@@ -53,6 +54,7 @@ Example configuration file:
         "chat_id": -1001005640892
       }
     ],
+    "forward": true,
     "filter": {
       "regex": "(?i)(any|regex?|(you)*want)"
     }
