@@ -1,14 +1,14 @@
 # Simple Telegram forwarder
 
-A small tool for automatically forwarding telegram messages from a source chat to a list of destination chats as they appear.
+A small tool for automatically forwarding telegram messages from source chats to destination chats in real time as messages appear.
 
-- Monitoring multiple sources and forwarding/coying messages to all the defined destinations
-- Forwarding (with 'Forwarded to' label) or just copying (posting as new) messages to destinations
-- Filtering messages with regular expressions
+- Monitoring multiple sources and forwarding/copying messages to all the defined destinations
+- Forwarding (with 'Forwarded to' label) or copying (posting as new) messages
+- Filtering messages with regular expressions, so only messages that match the filter get copied/forwarded
 - `--auth-only` flag to only interactively login to Telegram and then exit
-- This app uses Client API, so there is no need to create any bots and be an admin of the group/channel from where you
+- The app uses Telegram Client API, so there is no need to create any bots and be an admin of the group/channel from where you
   want to forward messages
-- You don't need to trust any third party software or service with your Telegram account as this app
+- You don't need to trust any third party software or service with your Telegram account, this app
   does not force you to forward your Telegram OTP code anywhere.
 
 ### Usage
@@ -25,7 +25,7 @@ have necessary permissions in the chats/groups/channels between which you want t
 
 ### Configuration
 
-Configuration is done via a json file. File name can be specified with `CONFIG_FILE` environment variable, by default it
+Configuration is done via a json file. File name of the json file can be specified with `CONFIG_FILE` environment variable, by default it
 is `simple-telegram-forwarder.config.json`.
 
 | Field JSONPath                                 | Example value                    | Description                                                                                                                     |
@@ -79,7 +79,7 @@ go build .
 If it is the first run, then you will be prompted to enter your phone and OTP code.
 After that TDLib will create `.tdlib` folder in the working directory which stores session data.
 
-If you wish to decouple logging in to Telegram and normal app usage, then run the executable with `--auth-only` flag. 
+If you wish to decouple logging in to Telegram from normal app usage, then run the executable with `--auth-only` flag. 
 
 ```shell
 ./simple-telegram-forwarder --auth-only
@@ -97,12 +97,12 @@ Or pull an existing one from DockerHub (for linux-amd64 only):
 docker pull marchukd/simple-telegram-forwarder
 ```
 
-When running for the first time, pass`--auth-only` flag to interactively authorize to Telegram and then exit:
+When running for the first time, pass`--auth-only` flag to make application interactively authorize to Telegram and then exit:
 ```shell
 docker container run -it -v ./.tdlib:/app/.tdlib -v ./simple-telegram-forwarder.config.json:/app/simple-telegram-forwarder.config.json:ro simple-telegram-forwarder ./simple-telegram-forwarder --auth-only
 ```
 
-After that run as usual:
+After that execute to run the app normally:
 ```shell
 docker run -v ./.tdlib:/app/.tdlib -v ./simple-telegram-forwarder.config.json:/app/simple-telegram-forwarder.config.json:ro simple-telegram-forwarder
 ```
